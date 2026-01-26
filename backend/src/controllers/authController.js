@@ -40,7 +40,7 @@ export const register = async (req, res) => {
     });
 
     res.status(201).json({
-      message: 'Registration successful',
+      message: 'Registration successfully',
       user: {
         user_id: result.insertId,
         full_name,
