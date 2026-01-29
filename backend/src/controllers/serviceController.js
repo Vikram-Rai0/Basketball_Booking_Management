@@ -193,3 +193,38 @@ const getAvilableSlots = async (req, res) => {
     res.status(500).json({ message: 'Server error', error: error.message });
   }
 }
+
+// Create time slot (Admin only -for own services)
+const createTimeSlot = async (req,res) => {
+  try{
+    const { service_id , start_time, end_time, status } = req.body;
+    const admin_id = req.user.user_id;
+    if(!service_id || !start_time || !end_time){
+      return res.status(400).json({ message: 'Please provide required fields'});
+    }
+
+    //Verify admin owns this service 
+    const [ service] = await pool.query(
+      'SELECT * FROM services WHERE service_id = ? AND admin_id = ?',
+      [service_id, admin_id]
+    );
+
+    if(service.length === 0){
+      return res.status(403).json({ message: 'You do not have permission to create time slots for this service'});
+    }
+
+    const [result] = await pool.query(
+      'INSERT INTO time_slots (service_id, start_time, end_time, status) VALUES (?,?,?,?)',
+      [service_id, start_time, end_time, status || 'available',admin_id]
+    );
+
+    res.status(201).json({
+      message: 'Time slot created successfully',
+      slot_id: result.insertId,
+    });
+  } catch (error){
+    console.error('Create time slot error:', error);
+    res.status(500).json({ message: 'Server error', error: error.message
+    })
+  }
+}
