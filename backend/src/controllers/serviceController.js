@@ -1,0 +1,132 @@
+import pool from '../config/db.js';
+
+//Get all services ( Admin sees only their own , unless super admin)
+const getAllServices = async (req, res) => {
+  try {
+    const admin_id = req.user.user_id;
+    const isAAdminb = req.user.role === 'admin';
+
+    let query = 'SELECT * FROM services ORDERD BY service_id';
+    let params = [];
+
+    //Each admin sees only their own services
+    if (isAAdminb) {
+      {
+        query = 'SELECT * FROM services WHERE admin_id =? OERDER BY service_id';
+        params = [admin_id];
+      }
+      const [services] = await pool.query(query, params);
+      res.json(services);
+    }
+  }
+  catch (error) {
+    console.error('Get services error:', error);
+    res.status(500).json({ message: 'Server error', error: error.message });
+  }
+};
+
+//Get active services only (public - all active services)
+const getActiveServices = async (req, res) => {
+  try {
+    const [services] = await pool.query('SELECT * FROM services WHERE status = "active" ORDER BY service_id');
+  }
+  catch (error) {
+    console.error('Get active services error:', error);
+    res.status(500).json({ message: 'Server error', error: error.message });
+  }
+};
+
+//Create new service (Admin only)
+const createService = async (req, res) => {
+  try {
+    const { service_name, description, price, status } = req.body;
+    const admin_id = req.user.user_id;
+
+    if (!service_name || !price) {
+      return res.status(400).json({ message: 'Please provide service name and price' });
+    }
+    const [result] = await pool.query(
+      'INSERT INTO services (service_name, description, price, status, admin_id) VALUES (?,?,?,?,?)',
+      [service_name, description, price, status || 'active', admin_id]
+    );
+    res.status(201).json({
+      message: 'Service created successfully',
+      service_id: result.insertId,
+    });
+  } catch (error) {
+    console.error('Create service error:', error);
+    res.status(500).json({ message: 'Server error', error: error.message })
+  }
+}
+
+const updateService = async (req, res) => {
+  try {
+    const { service_id } = req.params;
+    const { service_name, description, price, status } = req.body;
+    const admin_id = req.user.user_id;
+
+    //Check if service belongs to this admin
+    const [service] = await pool.query(
+      'SELECT * FROM service WHERE  service_id = ? AND admin_id = ?',
+      [service_id, admin_id]
+    );
+    if (service.length === 0) {
+      return res.status(404).json({ message: 'Service not found ' })
+    } else if (!admin_id) {
+      return res.status(403).json({ message: 'Access denied,only admin can update service' })
+    }
+    await pool.query(
+      'UPDATE services SET service_name = ?, description = ?, price = ?, status = ? WHere service_id = ? AND admin_id = ?',
+      [service_name, description, price, status, service_id, admin_id]
+    );
+    res.json({ message: 'Service updated successfully' });
+  } catch (error) {
+    console.error('Update service error:', error);
+    res.status(500).json({ message: 'Server error', error: error.message }
+    )
+  }
+}
+
+const deleteService = async (req, res) => {
+  try {
+    const { service_id } = req.params;
+    const admin_id = req.user.user_id;
+
+    //Check if service belongs tot his admin
+    const [service] = await pool.query(
+      'SELECT * FROM services WHERE  service_id = ? AND  admin_id = ?',
+      [service_id, admin_id]
+    );
+    if (service.length === 0) {
+      return res.status(404).json({ message: 'Service not found' })
+    } else if (!admin_id) {
+      return res.status(403).json({ message: 'Access denied, only admin can delete service' })
+    }
+
+    // Check if there are any bookings for this service
+    const [bookings] = await pool.query(
+      'SELECT * FROM bookings WHERE service_id = ?',
+      [service_id]
+    );
+
+    if (bookings.length > 0) {
+      return res.status(400).json({ message: 'Cannot delete service with active bookings' });
+    }
+
+    await pool.query(
+      'DELETE FROM time_slots WHERE service_id = ?',
+      [service_id]
+    );
+
+    //Delete the service
+
+    await pool.query(
+      'DELETE FROM services WHERE service_id = ? AND admin_id = ?',
+      [service_id, admin_id]
+    );
+    res.json({ message: 'Service deleted successfully' });
+  } catch (error) {
+    console.error('Delete service error:', error);
+    res.status(500).json({ message: 'Server error', error: error.message });
+  }
+}
