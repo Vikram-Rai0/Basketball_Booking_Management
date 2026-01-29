@@ -161,3 +161,35 @@ const getTimeSlots = async (req, res) => {
     res.status(500).json({ message: 'Server error', error: error.message });
   }
 };
+
+const getAvilableSlots = async (req, res) => {
+  try {
+    const { service_id } = req.params;
+    const { booking_date } = req.query;
+
+    if (!booking_date) {
+      return res.status(400).json({ message: 'Please Provide booking date' });
+    }
+
+    //Get all slots for the service
+    const [allSlots] = await pool.query(
+      'SELECT * FROM time_slots WHERE service_id = ? AND STATUS = "available" ORDER BY start_time',
+      [service_id]
+    );
+
+    //Get booked slots for the date
+    const [booked] = await pool.query(
+      'SELECT slot_id FROM bookings WHERE service_id = ? AND booking_date = ? AND booking_status = "confirmed"',
+      [service_id]
+    );
+
+    const bookedSlotIds = new Set(booked.map(b => b.slot_id));
+    const avilable = allSlots.filter(slot => !bookedSlotIds.has(slot.slot_id));
+
+    res.json(avilable);
+  }
+  catch (error) {
+    console.error('Get available slots error:', error);
+    res.status(500).json({ message: 'Server error', error: error.message });
+  }
+}
