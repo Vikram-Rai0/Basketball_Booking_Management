@@ -294,3 +294,51 @@ const updateTimeSlot = async (req, res) => {
     res.status(500).json({ message: "Server error", error: error.message });
   }
 };
+
+// Delete time slot (Admin only - for own slots)
+const deletTimeSlot = async (req, res) => {
+  try {
+    const { slot_id } = req.params;
+    const admin_id = req.user.user_id;
+
+    // Check if slot belongs to admin
+    const [slot] = await pool.query(
+      "SELECT * FROM time_slots WHERE slot_id = ? AND admin_id = ?",
+      [slot_id, admin_id],
+    );
+    if (slot.length === 0) {
+      return res.status(404).json({ message: "Time slot not found , you do not have permission to delete it " });
+
+    }
+    //Check if slot is booked
+    const [bookings] = await pool.query(
+      "SELECT * FROM bookings WHERE slot_id = ? AND booking_status = 'confirmed'",
+      [slot_id],
+    );
+    if (bookings.length > 0) {
+      return res.status(400).json({ message: "Time slot is already booked , you can not delete it " });
+    }
+    const [deleteResult] = await pool.query(
+      "DELETE FROM time_slots Where slot_id =? and admin_id =?",
+      [slot_id, admin_id],
+    );
+
+    res.json({ message: "Time slot deleted successfully" });
+  } catch (error) {
+    console.error("Delete time slot error:", error);
+    res.status(500).json({ message: "Server error", error: error.message }
+    )
+  }
+};
+export {
+  getAllServices,
+  getActiveServices,
+  createService,
+  updateService,
+  deleteService,
+  getTimeSlots,
+  getAvilableSlots,
+  createTimeSlot,
+  updateTimeSlot,
+  deletTimeSlot,
+};
