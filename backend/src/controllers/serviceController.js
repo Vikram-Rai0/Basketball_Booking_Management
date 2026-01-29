@@ -130,3 +130,34 @@ const deleteService = async (req, res) => {
     res.status(500).json({ message: 'Server error', error: error.message });
   }
 }
+
+// Get time slots for a services (filtered by admin ownership)
+const getTimeSlots = async (req, res) => {
+  try {
+    const { service_id } = req.params;
+    const admin_id = req.user.user_id;
+    const isAdmin = req.user.role === 'admin';
+
+    let query = 'SELECT * FROM time_slots WHERE service_id = ? ORDER BY start_time';
+    let params = [service_id];
+
+    //If admin, verify they own this service 
+    if (isAdmin) {
+      const [service] = await pool.query(
+        'SELECT * from services WHERE service_id=? AND adin_id =?',
+        [service_id, admin_id]
+      );
+
+      if (service.length === 0) {
+        return res.status(404).json({ message: 'you do not have permission to view these time slots' });
+      }
+    }
+
+    const [slots] = await pool.query(query, params);
+    res.json(slots);
+  }
+  catch (error) {
+    console.error('Get time slots error:', error);
+    res.status(500).json({ message: 'Server error', error: error.message });
+  }
+};
