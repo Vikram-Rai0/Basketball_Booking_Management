@@ -86,3 +86,47 @@ const getUserBookings = async (req, res) => {
     res.status(500).json({ message: "Internal server error" });
   }
 };
+
+// get all bookings (Admin sees only booking for their services)
+const getAllBookings = async (req, res) => {
+  try {
+    const admin_id = req.user.user_id;
+    const isAdmin = req.user.role === 'admin';
+
+    if (!isAdmin) {
+      return res.status(403).json({ message: "Access denied" });
+    }
+
+    //Admin sees only boookings for their services
+    const [bookings] = await pool.query(
+      `SELECT 
+        b.booking_id,
+        b.booking_date,
+        b.total_amount,
+        b.payment_method,
+        b.payment_status,
+        b.booking_status,
+        b.created_at,
+        u.full_name,
+        u.email,
+        u.phone,
+        s.service_name,
+        t.start_time,
+        t.end_time
+       FROM bookings b
+       JOIN users u ON b.user_id = u.user_id
+       JOIN services s ON b.service_id = s.service_id
+       JOIN time_slots t ON b.slot_id = t.slot_id
+       WHERE s.admin_id = ?
+       ORDER BY b.booking_date DESC, t.start_time DESC`,
+      [admin_id],
+    );
+
+    res.json(bookings);
+  } catch (error) {
+    console.error("Error fetching all bookings:", error);
+    res.status(500).json(
+      { message: "Internal server error", error: error.message },
+    );
+  }
+}
