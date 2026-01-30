@@ -54,13 +54,11 @@ const createBooking = async (req, res) => {
       ],
     );
 
-    res
-      .status(201)
-      .json({
-        message: "Booking created successfully",
-        bookingId: newBooking.insertId,
-        total_amount: total_amount,
-      });
+    res.status(201).json({
+      message: "Booking created successfully",
+      bookingId: newBooking.insertId,
+      total_amount: total_amount,
+    });
   } catch (error) {
     console.error("Error creating booking:", error);
     res.status(500).json({ message: "Internal server error" });
@@ -91,7 +89,7 @@ const getUserBookings = async (req, res) => {
 const getAllBookings = async (req, res) => {
   try {
     const admin_id = req.user.user_id;
-    const isAdmin = req.user.role === 'admin';
+    const isAdmin = req.user.role === "admin";
 
     if (!isAdmin) {
       return res.status(403).json({ message: "Access denied" });
@@ -125,19 +123,18 @@ const getAllBookings = async (req, res) => {
     res.json(bookings);
   } catch (error) {
     console.error("Error fetching all bookings:", error);
-    res.status(500).json(
-      { message: "Internal server error", error: error.message },
-    );
+    res
+      .status(500)
+      .json({ message: "Internal server error", error: error.message });
   }
-}
-
+};
 
 // Get single booking details
 const getBookingById = async (req, res) => {
   try {
     const { booking_id } = req.params;
     const user_id = req.user.user_id;
-    const isAdmin = req.user.role === 'admin';
+    const isAdmin = req.user.role === "admin";
 
     let query = `
       SELECT 
@@ -164,22 +161,115 @@ const getBookingById = async (req, res) => {
     let params = [booking_id];
 
     if (isAdmin) {
-      query += ' AND s.admin_id = ?';
+      query += " AND s.admin_id = ?";
       params.push(user_id);
     } else {
-      query += ' AND b.user_id = ?';
+      query += " AND b.user_id = ?";
       params.push(user_id);
     }
 
     const [booking] = await pool.query(query, params);
 
     if (booking.length === 0) {
-      return res.status(404).json({ message: 'Booking not found or access denied' });
+      return res
+        .status(404)
+        .json({ message: "Booking not found or access denied" });
     }
 
     res.json(booking[0]);
   } catch (error) {
-    console.error('Get booking error:', error);
-    res.status(500).json({ message: 'Server error', error: error.message });
+    console.error("Get booking error:", error);
+    res.status(500).json({ message: "Server error", error: error.message });
+  }
+};
+
+// Update booking (Admin only - for their services)
+const updateBooking = async (req, res) => {
+  try {
+    const { booking_id } = req.params;
+    const { booking_status, payment_status } = req.body;
+    const admin_id = req.user.user_id;
+
+    // Verify admin owns the service for this booking
+    const [booking] = await pool.query(
+      `SELECT b.* FROM bookings b
+       JOIN services s ON b.service_id = s.service_id
+       WHERE b.booking_id = ? AND s.admin_id = ?`,
+      [booking_id, admin_id],
+    );
+
+    if (booking.length === 0) {
+      return res
+        .status(404)
+        .json({ message: "Booking not found or access denied" });
+    }
+
+    const updates = [];
+    const values = [];
+
+    if (booking_status) {
+      updates.push("booking_status = ?");
+      values.push(booking_status);
+    }
+
+    if (payment_status) {
+      updates.push("payment_status = ?");
+      values.push(payment_status);
+    }
+
+    if (updates.length === 0) {
+      return res.status(400).json({ message: "No fields to update" });
+    }
+
+    values.push(booking_id);
+
+    await pool.query(
+      `UPDATE bookings SET ${updates.join(", ")} WHERE booking_id = ?`,
+      values,
+    );
+
+    res.json({ message: "Booking updated successfully" });
+  } catch (error) {
+    console.error("Update booking error:", error);
+    res.status(500).json({ message: "Server error", error: error.message });
+  }
+};
+
+//Cancle booking (User can cancle their own, admin can cancle for their services)
+const cancleBooking = async (req, res) => {
+  try {
+    const { booking_id } = req.params;
+    const user_id = req.user.user_id;
+    const isAdmin = req.user.role === "admin";
+
+    let query;
+    let params;
+
+    if (isAdmin) {
+      // Admin can cancle bookings for their services
+      query = `SELECT b.* FROM bookings b JOIN services s ON b.service_id = s.servicd_id WHERE b.booking-id = ? AND s.admin_id = ?`;
+      params = [booking_id, user_id];
+    } else {
+      //user can cancle their own bookings
+      query = `SELECT * FROM bookings WHERE booking_id = ? AND user_id = ?`;
+      params = [booking_id, user_id];
+    }
+
+    const [booking] = await pool.query(query, params);
+
+    if (booking.length === 0) {
+      return res
+        .status(404)
+        .json({ message: "Booking not found or access denied" });
+    }
+
+    if (booking[0].booking_status === "cancelled") {
+      return res.status(400).json({ message: "Booking is already cancelled" });
+    }
+    await pool.query(`DELETE FORM booking WHERE booking_id = ?`, [booking_id]);
+    res.json({ message: "Booking cancelled successfully" });
+  } catch (error) {
+    console.error("Cancle booking error:", error);
+    res.status(500).json({ message: "Server error", error: error.message });
   }
 };
