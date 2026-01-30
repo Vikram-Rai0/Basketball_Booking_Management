@@ -130,3 +130,56 @@ const getAllBookings = async (req, res) => {
     );
   }
 }
+
+
+// Get single booking details
+const getBookingById = async (req, res) => {
+  try {
+    const { booking_id } = req.params;
+    const user_id = req.user.user_id;
+    const isAdmin = req.user.role === 'admin';
+
+    let query = `
+      SELECT 
+        b.booking_id,
+        b.booking_date,
+        b.total_amount,
+        b.payment_method,
+        b.payment_status,
+        b.booking_status,
+        b.created_at,
+        u.full_name,
+        u.email,
+        u.phone,
+        s.service_name,
+        s.description,
+        t.start_time,
+        t.end_time
+      FROM bookings b
+      JOIN users u ON b.user_id = u.user_id
+      JOIN services s ON b.service_id = s.service_id
+      JOIN time_slots t ON b.slot_id = t.slot_id
+      WHERE b.booking_id = ?`;
+
+    let params = [booking_id];
+
+    if (isAdmin) {
+      query += ' AND s.admin_id = ?';
+      params.push(user_id);
+    } else {
+      query += ' AND b.user_id = ?';
+      params.push(user_id);
+    }
+
+    const [booking] = await pool.query(query, params);
+
+    if (booking.length === 0) {
+      return res.status(404).json({ message: 'Booking not found or access denied' });
+    }
+
+    res.json(booking[0]);
+  } catch (error) {
+    console.error('Get booking error:', error);
+    res.status(500).json({ message: 'Server error', error: error.message });
+  }
+};
