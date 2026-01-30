@@ -273,3 +273,28 @@ const cancleBooking = async (req, res) => {
     res.status(500).json({ message: "Server error", error: error.message });
   }
 };
+
+//Delete booking (Admin only - for their services)
+
+const deleteBooking = async (req, res) => {
+  try {
+    const { booking_id } = req.params;
+    const admin_id = req.user.user_id;
+
+    // Verify admin owns the service for this booking
+    const [booking] = await pool.query(
+      `SELECT b.* FROM bookings b JOIN services s ON b.service_id = s.service_id WHERE b.booking_id = ? AND s.admin_id = ?`,
+      [booking_id, admin_id],
+    )
+    if (booking.length === 0) {
+      return res.status(404).json({ message: "Booking not found or access denied" });
+    }
+    await pool.query(`DELETE FROM bookings WHERE booking_id = ?`, [booking_id]);
+
+    res.josn({ message: "Booking delete successfully" });
+  } catch (error) {
+    console.error("Delete booking error:", error);
+    res.status(500).json({ message: "Server error", error: error.message });
+  }
+  
+}
