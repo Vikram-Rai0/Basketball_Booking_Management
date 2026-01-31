@@ -104,8 +104,69 @@ const getUserBookings = async (req, res) => {
       [user_id, admin_id]
     );
     res.json(bookings);
-  }catch (error) {
+  } catch (error) {
     console.error('Get user bookings error:', error);
     res.status(500).json({ message: 'Server error', error: error.message });
   }
 }
+
+
+// Update user (Limited - admin can only update users who booked their services)
+const updateUser = async (req, res) => {
+  try {
+    const { user_id } = req.params;
+    const { full_name, email, phone } = req.body;
+    const admin_id = req.user.user_id;
+    const isAdmin = req.user.role === 'admin';
+
+    if (!isAdmin) {
+      return res.status(403).json({ message: 'Access denied' });
+    }
+
+    // Verify user has booked admin's services
+    const [hasBooking] = await pool.query(
+      `SELECT COUNT(*) as count FROM bookings b
+       JOIN services s ON b.service_id = s.service_id
+       WHERE b.user_id = ? AND s.admin_id = ?`,
+      [user_id, admin_id]
+    );
+
+    if (hasBooking[0].count === 0) {
+      return res.status(403).json({ message: 'You can only update users who have booked your services' });
+    }
+
+    const updates = [];
+    const values = [];
+
+    if (full_name) {
+      updates.push('full_name = ?');
+      values.push(full_name);
+    }
+
+    if (email) {
+      updates.push('email = ?');
+      values.push(email);
+    }
+
+    if (phone) {
+      updates.push('phone = ?');
+      values.push(phone);
+    }
+
+    if (updates.length === 0) {
+      return res.status(400).json({ message: 'No fields to update' });
+    }
+
+    values.push(user_id);
+
+    await pool.query(
+      `UPDATE users SET ${updates.join(', ')} WHERE user_id = ?`,
+      values
+    );
+
+    res.json({ message: 'User updated successfully' });
+  } catch (error) {
+    console.error('Update user error:', error);
+    res.status(500).json({ message: 'Server error', error: error.message });
+  }
+};
