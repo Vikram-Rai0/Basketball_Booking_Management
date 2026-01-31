@@ -333,3 +333,82 @@ const updatePaymentStatus = async (req, res) => {
     res.status(500).json({ message: "Server error", error: error.message });
   }
 }
+
+//Get Booking statistics (Admin sees stats for their service only)
+const getBookingStats = async (req, res) => {
+  try{
+    const admin_id = req.user.user_id;
+    const isAdmin = req.user.role === 'admin';
+
+    if(!isAdmin){
+      return res .status(403).json({ message: "Access denied" });
+    }
+
+    // Total bookings for admin's services
+    const [totalBookings] = await pool.query(
+      `SELECT COUNT(*) AS total FROM bookings b JOIN services s ON b.service_id = s.service_id WHERE s.admin_id =?`,
+      [admin_id]
+    );
+
+    //Confirmed bookings 
+    const [confirmedBokings] = await pool.query(
+      `SELECT COUNT(*) as total FFROM bookings b Join service s ON b.service_id = s.service_id WHERE s.admin_id =? AND b.booking_status = "confirmed"`
+      [admin_id]
+    );
+
+      // Pending bookings
+    const [pendingBookings] = await pool.query(
+      `SELECT COUNT(*) as total FROM bookings b
+       JOIN services s ON b.service_id = s.service_id
+       WHERE b.payment_status = "pending" AND s.admin_id = ?`,
+      [admin_id]
+    );
+
+        // Total revenue
+    const [revenue] = await pool.query(
+      `SELECT SUM(b.total_amount) as total FROM bookings b
+       JOIN services s ON b.service_id = s.service_id
+       WHERE b.payment_status = "completed" AND s.admin_id = ?`,
+      [admin_id]
+    );
+
+     // Total users who booked admin's services
+    const [totalUsers] = await pool.query(
+      `SELECT COUNT(DISTINCT b.user_id) as total FROM bookings b
+       JOIN services s ON b.service_id = s.service_id
+       WHERE s.admin_id = ?`,
+      [admin_id]
+    );
+
+        // Bookings today
+    const [todayBookings] = await pool.query(
+      `SELECT COUNT(*) as total FROM bookings b
+       JOIN services s ON b.service_id = s.service_id
+       WHERE b.booking_date = CURDATE() AND s.admin_id = ?`,
+      [admin_id]
+    );
+
+    res.json({
+      totalBookings: totalBookings[0].total,
+      confirmedBookings: confirmedBokings[0].total,
+      pendingBookings: pendingBookings[0].total,
+      totalRevenue: revenue[0].total,
+      totalUsers: totalUsers[0].total,
+      todayBookings: todayBookings[0].total,
+    });
+  } catch (error) {
+    console.error("Get booking stats error:", error);
+    res.status(500).json({ message: "Server error", error: error.message });    
+  }
+}
+export {
+  createBooking,
+  getUserBookings,
+  getAllBookings,
+  getBookingById,
+  updateBooking,
+  cancleBooking,
+  deleteBooking,
+  updatePaymentStatus,
+  getBookingStats,
+};
