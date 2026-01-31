@@ -72,3 +72,40 @@ const getUserById = async (req, res) => {
     res.status(500).json({ message: 'Server error', error: error.message });
   }
 };
+
+// Get user's bookings (Admin can view bookings of users who used their services)
+const getUserBookings = async (req, res) => {
+  try {
+    const { user_id } = req.params;
+    const admin_id = req.user.user_id;
+    const isAdmin = req.user.role === 'admin';
+    if (!isAdmin) {
+      return res.status(403).json({ message: 'Access denied' });
+    }
+
+    // Get booking for admin's services only
+    const [bookings] = await pool.query(
+      `SELECT   b.booking_id,
+        b.booking_date,
+        b.total_amount,
+        b.payment_method,
+        b.payment_status,
+        b.booking_status,
+        b.created_at,
+        s.service_name,
+        t.start_time,
+        t.end_time
+
+               FROM bookings b
+               JOIN services s ON b.service_id = s.service_id
+               JOIN time_slots t ON b.time_slot_id = t.time_slot_id
+               WHERE b.user_id = ? AND s.admin_id = ?
+               ORDER BY b.created_at DESC`,
+      [user_id, admin_id]
+    );
+    res.json(bookings);
+  }catch (error) {
+    console.error('Get user bookings error:', error);
+    res.status(500).json({ message: 'Server error', error: error.message });
+  }
+}
