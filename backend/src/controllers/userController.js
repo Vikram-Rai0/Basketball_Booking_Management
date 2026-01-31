@@ -31,7 +31,44 @@ const getAllUsers = async (req, res) => {
     );
     res.json(users);
   } catch (error) {
-    res.status(500).json({ message: 'Error fetching users', error }); 
+    res.status(500).json({ message: 'Error fetching users', error });
   }
 };
 
+// Get user by ID (Admin can view users who booked their services)
+const getUserById = async (req, res) => {
+  try {
+    const { user_id } = req.params;
+    const admin_id = req.user.user_id;
+    const isAdmin = req.user.role === 'admin';
+
+    if (!isAdmin) {
+      return res.status(403).json({ message: 'Access denied' });
+    }
+
+    // Check if user has booked admin's services
+    const [user] = await pool.query(
+      `SELECT DISTINCT 
+        u.user_id,
+        u.full_name,
+        u.email,
+        u.phone,
+        u.role,
+        u.created_at
+       FROM users u
+       JOIN bookings b ON u.user_id = b.user_id
+       JOIN services s ON b.service_id = s.service_id
+       WHERE u.user_id = ? AND s.admin_id = ?`,
+      [user_id, admin_id]
+    );
+
+    if (user.length === 0) {
+      return res.status(404).json({ message: 'User not found or access denied' });
+    }
+
+    res.json(user[0]);
+  } catch (error) {
+    console.error('Get user error:', error);
+    res.status(500).json({ message: 'Server error', error: error.message });
+  }
+};
