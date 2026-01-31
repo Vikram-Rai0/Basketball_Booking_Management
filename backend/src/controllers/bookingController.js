@@ -336,12 +336,12 @@ const updatePaymentStatus = async (req, res) => {
 
 //Get Booking statistics (Admin sees stats for their service only)
 const getBookingStats = async (req, res) => {
-  try{
+  try {
     const admin_id = req.user.user_id;
     const isAdmin = req.user.role === 'admin';
 
-    if(!isAdmin){
-      return res .status(403).json({ message: "Access denied" });
+    if (!isAdmin) {
+      return res.status(403).json({ message: "Access denied" });
     }
 
     // Total bookings for admin's services
@@ -356,7 +356,7 @@ const getBookingStats = async (req, res) => {
       [admin_id]
     );
 
-      // Pending bookings
+    // Pending bookings
     const [pendingBookings] = await pool.query(
       `SELECT COUNT(*) as total FROM bookings b
        JOIN services s ON b.service_id = s.service_id
@@ -364,7 +364,7 @@ const getBookingStats = async (req, res) => {
       [admin_id]
     );
 
-        // Total revenue
+    // Total revenue
     const [revenue] = await pool.query(
       `SELECT SUM(b.total_amount) as total FROM bookings b
        JOIN services s ON b.service_id = s.service_id
@@ -372,7 +372,7 @@ const getBookingStats = async (req, res) => {
       [admin_id]
     );
 
-     // Total users who booked admin's services
+    // Total users who booked admin's services
     const [totalUsers] = await pool.query(
       `SELECT COUNT(DISTINCT b.user_id) as total FROM bookings b
        JOIN services s ON b.service_id = s.service_id
@@ -380,7 +380,7 @@ const getBookingStats = async (req, res) => {
       [admin_id]
     );
 
-        // Bookings today
+    // Bookings today
     const [todayBookings] = await pool.query(
       `SELECT COUNT(*) as total FROM bookings b
        JOIN services s ON b.service_id = s.service_id
@@ -398,7 +398,7 @@ const getBookingStats = async (req, res) => {
     });
   } catch (error) {
     console.error("Get booking stats error:", error);
-    res.status(500).json({ message: "Server error", error: error.message });    
+    res.status(500).json({ message: "Server error", error: error.message });
   }
 }
 export {
