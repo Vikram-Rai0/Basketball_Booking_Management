@@ -170,3 +170,79 @@ const updateUser = async (req, res) => {
     res.status(500).json({ message: 'Server error', error: error.message });
   }
 };
+
+// Delete user (Admin cannot delete, only view users who booked their services)
+const deleteUser = async (req, res) => {
+  try {
+    return res.status(403).json({
+      message: 'User deletion is not allowed. Please contact system administrator.'
+    });
+  } catch (error) {
+    console.error('Delete user error:', error);
+    res.status(500).json({ message: 'Server error', error: error.message });
+  }
+};
+
+// Get user statistics (for a specific user who booked admin's services)
+const getUserStats = async (req, res) => {
+  try {
+    const { user_id } = req.params;
+    const admin_id = req.user.user_id;
+    const isAdmin = req.user.role === 'admin';
+
+    if (!isAdmin) {
+      return res.status(403).json({ message: 'Access denied' });
+    }
+
+    // Total bookings by this user for admin's services
+    const [totalBookings] = await pool.query(
+      `SELECT COUNT(*) as total FROM bookings b
+       JOIN services s ON b.service_id = s.service_id
+       WHERE b.user_id = ? AND s.admin_id = ?`,
+      [user_id, admin_id]
+    );
+
+    // Total amount spent
+    const [totalSpent] = await pool.query(
+      `SELECT SUM(b.total_amount) as total FROM bookings b
+       JOIN services s ON b.service_id = s.service_id
+       WHERE b.user_id = ? AND s.admin_id = ? AND b.payment_status = 'completed'`,
+      [user_id, admin_id]
+    );
+
+    // Confirmed bookings
+    const [confirmedBookings] = await pool.query(
+      `SELECT COUNT(*) as total FROM bookings b
+       JOIN services s ON b.service_id = s.service_id
+       WHERE b.user_id = ? AND s.admin_id = ? AND b.booking_status = 'confirmed'`,
+      [user_id, admin_id]
+    );
+
+    // Cancelled bookings
+    const [cancelledBookings] = await pool.query(
+      `SELECT COUNT(*) as total FROM bookings b
+       JOIN services s ON b.service_id = s.service_id
+       WHERE b.user_id = ? AND s.admin_id = ? AND b.booking_status = 'cancelled'`,
+      [user_id, admin_id]
+    );
+
+    res.json({
+      totalBookings: totalBookings[0].total,
+      totalSpent: totalSpent[0].total || 0,
+      confirmedBookings: confirmedBookings[0].total,
+      cancelledBookings: cancelledBookings[0].total
+    });
+  } catch (error) {
+    console.error('Get user stats error:', error);
+    res.status(500).json({ message: 'Server error', error: error.message });
+  }
+};
+
+export {
+  getAllUsers,
+  getUserById,
+  getUserBookings,
+  updateUser,
+  deleteUser,
+  getUserStats
+};
