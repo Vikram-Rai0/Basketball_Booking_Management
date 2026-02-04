@@ -1,7 +1,7 @@
-import { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
 import Navbar from "./shared/Navbar";
-import Footer from "./shared/Footert";
+import Footer from "./shared/Footer"; // Fixed typo
 import {
   ShieldCheck,
   Trophy,
@@ -43,9 +43,7 @@ const Stat = ({ value, label, delay = 0 }) => (
     className="text-center transform transition-all duration-500 hover:scale-110"
     style={{ animationDelay: `${delay}ms` }}
   >
-    <div className="text-4xl md:text-5xl font-bold text-orange-500 mb-2">
-      {value}
-    </div>
+    <div className="text-3xl md:text-4xl font-bold text-white b-2">{value}</div>
     <div className="text-sm md:text-base text-gray-300 font-medium uppercase tracking-wide">
       {label}
     </div>
@@ -58,7 +56,10 @@ const FeatureCard = ({ icon: Icon, title, desc, delay = 0 }) => (
     style={{ animationDelay: `${delay}ms` }}
   >
     <div className="w-14 h-14 rounded-xl bg-orange-50 flex items-center justify-center mb-5 group-hover:bg-orange-500 transition-colors duration-300">
-      <Icon className="text-orange-500 group-hover:text-white transition-colors duration-300" size={28} />
+      <Icon
+        className="text-orange-500 group-hover:text-white transition-colors duration-300"
+        size={28}
+      />
     </div>
     <h3 className="font-bold text-lg mb-3 text-gray-900">{title}</h3>
     <p className="text-gray-600 leading-relaxed">{desc}</p>
@@ -83,72 +84,73 @@ const ProcessStep = ({ number, title, desc, delay = 0 }) => (
   </div>
 );
 
-const TournamentCard = ({ delay = 0 }) => (
-  <div
-    className="bg-white rounded-2xl overflow-hidden border border-gray-100 hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1"
-    style={{ animationDelay: `${delay}ms` }}
-  >
-    <div className="relative overflow-hidden group">
-      <img
-        src={TOURNAMENT}
-        className="h-56 w-full object-cover transition-transform duration-500 group-hover:scale-110"
-        alt="Tournament"
-      />
-      <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
-    </div>
-    <div className="p-6">
-      <div className="flex items-center gap-2 mb-3">
-        <span className="px-3 py-1 bg-orange-100 text-orange-600 text-xs font-semibold rounded-full">
-          UPCOMING
-        </span>
-        <span className="text-sm text-gray-500">Feb 15, 2026</span>
+const TournamentCard = ({ delay = 0 }) => {
+  const navigate = useNavigate();
+
+  return (
+    <div
+      className="bg-white rounded-2xl overflow-hidden border border-gray-100 hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1"
+      style={{ animationDelay: `${delay}ms` }}
+    >
+      <div className="relative overflow-hidden group">
+        <img
+          src={TOURNAMENT}
+          className="h-56 w-full object-cover transition-transform duration-500 group-hover:scale-110"
+          alt="Basketball tournament"
+        />
+        <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
       </div>
-      <h3 className="font-bold text-xl mb-2 text-gray-900">Summer Slam Tournament</h3>
-      <p className="text-gray-600 mb-4">5v5 • Open Division • Prize Pool</p>
-      <button
-        onClick={() => { window.location.href = '/services'; }}
-        className="group flex items-center gap-2 text-orange-500 font-semibold hover:gap-3 transition-all duration-300">
-        Register Now
-        <ArrowRight size={18} className="group-hover:translate-x-1 transition-transform" />
-      </button>
+      <div className="p-6">
+        <div className="flex items-center gap-2 mb-3">
+          <span className="px-3 py-1 bg-orange-100 text-orange-600 text-xs font-semibold rounded-full">
+            UPCOMING
+          </span>
+          <span className="text-sm text-gray-500">Feb 15, 2026</span>
+        </div>
+        <h3 className="font-bold text-xl mb-2 text-gray-900">
+          Summer Slam Tournament
+        </h3>
+        <p className="text-gray-600 mb-4">5v5 • Open Division • Prize Pool</p>
+        <button
+          onClick={() => navigate("/services")}
+          className="group flex items-center gap-2 text-orange-500 font-semibold hover:gap-3 transition-all duration-300"
+        >
+          Register Now
+          <ArrowRight
+            size={18}
+            className="group-hover:translate-x-1 transition-transform"
+          />
+        </button>
+      </div>
     </div>
-  </div>
-);
+  );
+};
 
 /* ------------------ MAIN PAGE ------------------ */
 const HomePage = () => {
   const navigate = useNavigate();
-  const [scrolled, setScrolled] = useState(false);
   const [formData, setFormData] = useState({
-    name: '',
-    email: '',
-    message: ''
+    name: "",
+    email: "",
+    message: "",
   });
-
-  useEffect(() => {
-    const handleScroll = () => {
-      setScrolled(window.scrollY > 50);
-    };
-    window.addEventListener('scroll', handleScroll);
-    return () => window.removeEventListener('scroll', handleScroll);
-  }, []);
 
   const handleSubmit = (e) => {
     e.preventDefault();
-    console.log('Form submitted:', formData);
+    console.log("Form submitted:", formData);
     // Add your form submission logic here
-    alert('Thank you for your message! We will get back to you soon.');
-    setFormData({ name: '', email: '', message: '' });
+    alert("Thank you for your message! We will get back to you soon.");
+    setFormData({ name: "", email: "", message: "" });
   };
 
   const handleBookNow = () => {
-    navigate('/services');
+    navigate("/services");
   };
 
   const scrollToGallery = () => {
-    const gallery = document.getElementById('gallery');
+    const gallery = document.getElementById("gallery");
     if (gallery) {
-      gallery.scrollIntoView({ behavior: 'smooth' });
+      gallery.scrollIntoView({ behavior: "smooth" });
     }
   };
 
@@ -157,11 +159,14 @@ const HomePage = () => {
       <Navbar />
 
       {/* ================= HERO SECTION ================= */}
-      <section className="relative pt-20 overflow-hidden">
-        <div
-          className="h-[600px] md:h-[700px] bg-cover bg-center relative"
-          style={{ backgroundImage: `url(${HERO})` }}
-        >
+      <section className="relative overflow-hidden">
+        <div className="relative h-[700px] md:h-[700px]">
+          {/* Background Image */}
+          <div
+            className="absolute inset-0 bg-cover bg-center "
+            style={{ backgroundImage: `url(${HERO})` }}
+          />
+
           {/* Overlay with gradient */}
           <div className="absolute inset-0 bg-gradient-to-br from-black/70 via-black/50 to-black/70" />
 
@@ -177,11 +182,13 @@ const HomePage = () => {
               {/* Badge */}
               <div className="inline-flex items-center gap-2 bg-white/10 backdrop-blur-sm border border-white/20 rounded-full px-6 py-2 mb-8 animate-fade-in">
                 <CheckCircle className="text-orange-400" size={20} />
-                <span className="text-white font-medium">Premium Basketball Facilities</span>
+                <span className="text-white font-medium">
+                  Premium Basketball Facilities
+                </span>
               </div>
 
               {/* Main heading */}
-              <h1 className="text-5xl md:text-7xl font-extrabold text-white mb-6 leading-tight animate-slide-up">
+              <h1 className="text-5xl md:text-7xl font-bold text-white mb-6 leading-tight animate-slide-up">
                 Book Your Court,
                 <br />
                 <span className="bg-gradient-to-r from-orange-400 to-orange-600 bg-clip-text text-transparent">
@@ -190,8 +197,10 @@ const HomePage = () => {
               </h1>
 
               {/* Subheading */}
-              <p className="text-xl md:text-2xl text-gray-200 mb-10 max-w-2xl mx-auto animate-slide-up-delay">
-                Professional-grade basketball courts with state-of-the-art facilities and flexible booking
+              <p className="text-md md:text-xl text-gray-200 mb-10 max-w-2xl mx-auto animate-slide-up-delay">
+                Reserve our professional basketball court instantly.
+                State-of-the-art facility with premium flooring, perfect
+                lighting, and top-tier equipment.
               </p>
 
               {/* CTA Buttons */}
@@ -202,10 +211,15 @@ const HomePage = () => {
                 >
                   <Calendar size={20} />
                   Book Your Court Now
-                  <ArrowRight size={20} className="group-hover:translate-x-1 transition-transform" />
+                  <ArrowRight
+                    size={20}
+                    className="group-hover:translate-x-1 transition-transform"
+                  />
                 </button>
-                <button className="group bg-white/10 backdrop-blur-sm border-2 border-white/30 text-white px-8 py-4 rounded-full font-semibold hover:bg-white/20 transition-all duration-300 flex items-center justify-center gap-2"
-                  onClick={scrollToGallery}>
+                <button
+                  className="group bg-white/10 backdrop-blur-sm border-2 border-white/30 text-white px-8 py-4 rounded-full font-semibold hover:bg-white/20 transition-all duration-300 flex items-center justify-center gap-2"
+                  onClick={scrollToGallery}
+                >
                   <PlayCircle size={20} />
                   Watch Tour
                 </button>
@@ -223,7 +237,7 @@ const HomePage = () => {
       </section>
 
       {/* ================= ABOUT SECTION ================= */}
-      <section className="py-20 md:py-32 bg-gradient-to-b from-white to-gray-50">
+      <section className="py-20 md:py-25 bg-gradient-to-b from-white to-gray-50">
         <div className="max-w-7xl mx-auto px-6">
           <div className="grid lg:grid-cols-2 gap-16 items-center">
             {/* Text Content */}
@@ -242,18 +256,19 @@ const HomePage = () => {
               </h2>
 
               <p className="text-lg text-gray-600 mb-8 leading-relaxed">
-                Experience basketball at its finest with our professional hardwood floors,
-                FIBA-standard equipment, and meticulously maintained facilities. Whether you're
-                training for competition or playing for fun, our courts provide the perfect environment.
+                Experience basketball at its finest with our professional
+                hardwood floors, FIBA-standard equipment, and meticulously
+                maintained facilities. Whether you're training for competition
+                or playing for fun, our courts provide the perfect environment.
               </p>
 
               {/* Feature list */}
               <div className="space-y-4 mb-10">
                 {[
-                  'Professional hardwood flooring',
-                  'FIBA-standard equipment',
-                  'Climate-controlled environment',
-                  'Premium lighting system'
+                  "Professional hardwood flooring",
+                  "FIBA-standard equipment",
+                  "Climate-controlled environment",
+                  "Premium lighting system",
                 ].map((feature, i) => (
                   <div key={i} className="flex items-center gap-3">
                     <div className="w-6 h-6 rounded-full bg-orange-100 flex items-center justify-center flex-shrink-0">
@@ -267,23 +282,29 @@ const HomePage = () => {
               {/* Stats Grid */}
               <div className="grid grid-cols-3 gap-8 pt-8 border-t border-gray-200">
                 <div>
-                  <div className="text-3xl font-bold text-orange-500 mb-1">94%</div>
+                  <div className="text-3xl font-bold text-orange-500 mb-1">
+                    94%
+                  </div>
                   <div className="text-sm text-gray-600">Satisfaction Rate</div>
                 </div>
                 <div>
-                  <div className="text-3xl font-bold text-orange-500 mb-1">50+</div>
+                  <div className="text-3xl font-bold text-orange-500 mb-1">
+                    50+
+                  </div>
                   <div className="text-sm text-gray-600">Events Hosted</div>
                 </div>
                 <div>
-                  <div className="text-3xl font-bold text-orange-500 mb-1">10+</div>
+                  <div className="text-3xl font-bold text-orange-500 mb-1">
+                    10+
+                  </div>
                   <div className="text-sm text-gray-600">Premium Courts</div>
                 </div>
               </div>
             </div>
 
             {/* Image */}
-            <div className="order-1 lg:order-2 relative">
-              <div className="relative rounded-3xl overflow-hidden shadow-2xl">
+            <div className="order-1 lg:order-2 relative border-2 h-full">
+              <div className="relative rounded-2xl  overflow-hidden shadow-2xl h-full">
                 <img
                   src={COURT}
                   className="w-full h-full object-cover"
@@ -296,7 +317,9 @@ const HomePage = () => {
                       <Users className="text-orange-500" size={24} />
                     </div>
                     <div>
-                      <div className="text-2xl font-bold text-gray-900">5000+</div>
+                      <div className="text-2xl font-bold text-gray-900">
+                        5000+
+                      </div>
                       <div className="text-sm text-gray-600">Happy Players</div>
                     </div>
                   </div>
@@ -325,7 +348,8 @@ const HomePage = () => {
               </span>
             </h2>
             <p className="text-lg text-gray-600">
-              Experience the best basketball facilities with features designed for both casual and competitive players
+              Experience the best basketball facilities with features designed
+              for both casual and competitive players
             </p>
           </div>
 
@@ -372,7 +396,7 @@ const HomePage = () => {
       </section>
 
       {/* ================= HOW IT WORKS ================= */}
-      <section className="py-20 md:py-32 bg-gradient-to-b from-gray-50 to-white">
+      <section className="py-20 md:py-28 bg-gradient-to-b from-gray-50 to-white">
         <div className="max-w-7xl mx-auto px-6">
           {/* Section Header */}
           <div className="text-center max-w-3xl mx-auto mb-16">
@@ -383,7 +407,8 @@ const HomePage = () => {
               How It Works
             </h2>
             <p className="text-lg text-gray-600">
-              Book your court in just a few simple steps and start playing within minutes
+              Book your court in just a few simple steps and start playing
+              within minutes
             </p>
           </div>
 
@@ -422,14 +447,17 @@ const HomePage = () => {
               className="group bg-gradient-to-r from-orange-500 to-orange-600 text-white px-10 py-4 rounded-full font-semibold hover:shadow-xl hover:shadow-orange-500/30 transition-all duration-300 transform hover:scale-105 inline-flex items-center gap-2"
             >
               Start Booking Now
-              <ArrowRight size={20} className="group-hover:translate-x-1 transition-transform" />
+              <ArrowRight
+                size={20}
+                className="group-hover:translate-x-1 transition-transform"
+              />
             </button>
           </div>
         </div>
       </section>
 
       {/* ================= TOURNAMENTS ================= */}
-      <section className="py-20 md:py-32 bg-white">
+      <section className="py-20 md:py-2 bg-white">
         <div className="max-w-7xl mx-auto px-6">
           {/* Section Header */}
           <div className="text-center max-w-3xl mx-auto mb-16">
@@ -440,7 +468,8 @@ const HomePage = () => {
               Upcoming Tournaments
             </h2>
             <p className="text-lg text-gray-600">
-              Join our competitive tournaments and showcase your skills against the best players
+              Join our competitive tournaments and showcase your skills against
+              the best players
             </p>
           </div>
 
@@ -471,8 +500,9 @@ const HomePage = () => {
 
           {/* Quote */}
           <blockquote className="text-2xl md:text-3xl font-medium leading-relaxed mb-8">
-            "Absolutely the best basketball court experience in the city. Professional facilities,
-            great community, and seamless booking process. Highly recommended!"
+            "Absolutely the best basketball court experience in the city.
+            Professional facilities, great community, and seamless booking
+            process. Highly recommended!"
           </blockquote>
 
           {/* Author */}
@@ -489,7 +519,7 @@ const HomePage = () => {
       </section>
 
       {/* ================= GALLERY ================= */}
-      <section id="gallery" className="py-20 md:py-32 bg-gray-50">
+      <section id="gallery" className="py-16 md:py-28 bg-gray-50">
         <div className="max-w-7xl mx-auto px-6">
           {/* Section Header */}
           <div className="text-center max-w-3xl mx-auto mb-16">
@@ -500,7 +530,8 @@ const HomePage = () => {
               Explore Our Courts
             </h2>
             <p className="text-lg text-gray-600">
-              Take a look at our state-of-the-art facilities and premium basketball courts
+              Take a look at our state-of-the-art facilities and premium
+              basketball courts
             </p>
           </div>
 
@@ -514,7 +545,8 @@ const HomePage = () => {
                 <img
                   src={`${img}?q=80&w=1200`}
                   className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
-                  alt={`Court ${i + 1}`}
+                  alt={`Basketball court ${i + 1}`}
+                  loading="lazy"
                 />
                 <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
               </div>
@@ -524,7 +556,7 @@ const HomePage = () => {
       </section>
 
       {/* ================= CONTACT ================= */}
-      <section className="py-20 md:py-32 bg-white">
+      <section className="py-16 md:py-28 bg-white">
         <div className="max-w-7xl mx-auto px-6">
           <div className="grid lg:grid-cols-2 gap-16">
             {/* Contact Info */}
@@ -541,7 +573,8 @@ const HomePage = () => {
 
               <p className="text-lg text-gray-600 mb-10 leading-relaxed">
                 Have questions about our facilities or need help with booking?
-                We're here to help. Reach out to us and we'll get back to you as soon as possible.
+                We're here to help. Reach out to us and we'll get back to you as
+                soon as possible.
               </p>
 
               {/* Contact Details */}
@@ -551,7 +584,9 @@ const HomePage = () => {
                     <MapPin className="text-orange-500" size={24} />
                   </div>
                   <div>
-                    <div className="font-semibold text-gray-900 mb-1">Location</div>
+                    <div className="font-semibold text-gray-900 mb-1">
+                      Location
+                    </div>
                     <div className="text-gray-600">Kathmandu, Nepal</div>
                   </div>
                 </div>
@@ -561,7 +596,9 @@ const HomePage = () => {
                     <Phone className="text-orange-500" size={24} />
                   </div>
                   <div>
-                    <div className="font-semibold text-gray-900 mb-1">Phone</div>
+                    <div className="font-semibold text-gray-900 mb-1">
+                      Phone
+                    </div>
                     <div className="text-gray-600">+977 98XXXXXXXX</div>
                   </div>
                 </div>
@@ -571,7 +608,9 @@ const HomePage = () => {
                     <Mail className="text-orange-500" size={24} />
                   </div>
                   <div>
-                    <div className="font-semibold text-gray-900 mb-1">Email</div>
+                    <div className="font-semibold text-gray-900 mb-1">
+                      Email
+                    </div>
                     <div className="text-gray-600">info@courtbook.com</div>
                   </div>
                 </div>
@@ -580,7 +619,10 @@ const HomePage = () => {
 
             {/* Contact Form */}
             <div>
-              <form onSubmit={handleSubmit} className="bg-gray-50 p-8 md:p-10 rounded-2xl border border-gray-200">
+              <form
+                onSubmit={handleSubmit}
+                className="bg-gray-50 p-8 md:p-10 rounded-2xl border border-gray-200"
+              >
                 <div className="mb-6">
                   <label className="block text-sm font-semibold text-gray-700 mb-2">
                     Your Name
@@ -589,7 +631,9 @@ const HomePage = () => {
                     type="text"
                     required
                     value={formData.name}
-                    onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                    onChange={(e) =>
+                      setFormData({ ...formData, name: e.target.value })
+                    }
                     className="w-full px-4 py-3 text-gray-900 border border-gray-300 rounded-xl focus:ring-2 focus:ring-orange-500 focus:border-transparent transition-all outline-none"
                     placeholder="John Doe"
                   />
@@ -603,7 +647,9 @@ const HomePage = () => {
                     type="email"
                     required
                     value={formData.email}
-                    onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+                    onChange={(e) =>
+                      setFormData({ ...formData, email: e.target.value })
+                    }
                     className="w-full px-4 py-3 text-gray-900 border border-gray-300 rounded-xl focus:ring-2 focus:ring-orange-500 focus:border-transparent transition-all outline-none"
                     placeholder="john@example.com"
                   />
@@ -616,7 +662,9 @@ const HomePage = () => {
                   <textarea
                     required
                     value={formData.message}
-                    onChange={(e) => setFormData({ ...formData, message: e.target.value })}
+                    onChange={(e) =>
+                      setFormData({ ...formData, message: e.target.value })
+                    }
                     rows="5"
                     className="w-full px-4 py-3 text-gray-900 border border-gray-300 rounded-xl focus:ring-2 focus:ring-orange-500 focus:border-transparent transition-all outline-none resize-none"
                     placeholder="Tell us how we can help you..."
