@@ -13,7 +13,7 @@ import {
   DollarSign,
   ChevronLeft,
   ChevronRight,
-  X
+  X,
 } from "lucide-react";
 import api from "../../utils/api";
 
@@ -31,16 +31,20 @@ const getNext7Days = () => {
       date: d.getDate(),
       month: d.toLocaleDateString("en-US", { month: "short" }),
       fullDate: d.toISOString().split("T")[0],
-      dayName: d.toLocaleDateString("en-US", { weekday: "long", month: "long", day: "numeric" })
+      dayName: d.toLocaleDateString("en-US", {
+        weekday: "long",
+        month: "long",
+        day: "numeric",
+      }),
     });
   }
   return days;
 };
 
 const formatTime = (time) => {
-  const [hours, minutes] = time.split(':');
+  const [hours, minutes] = time.split(":");
   const hour = parseInt(hours);
-  const ampm = hour >= 12 ? 'PM' : 'AM';
+  const ampm = hour >= 12 ? "PM" : "AM";
   const hour12 = hour % 12 || 12;
   return `${hour12}:${minutes} ${ampm}`;
 };
@@ -68,13 +72,17 @@ const BookingForm = () => {
   // Fetch active services
   useEffect(() => {
     setLoading(true);
-    api.get("/services/active")
+    api
+      .get("/services/active")
       .then((res) => {
         setServices(res.data);
         if (res.data.length > 0) {
           // Auto-select first service
           setSelectedService(res.data[0]);
-          setFormData(prev => ({ ...prev, service_id: res.data[0].service_id }));
+          setFormData((prev) => ({
+            ...prev,
+            service_id: res.data[0].service_id,
+          }));
         }
         setError("");
       })
@@ -89,7 +97,7 @@ const BookingForm = () => {
       setError("");
       api
         .get(
-          `/bookings/available-slots/${formData.service_id}?date=${formData.booking_date}`
+          `/bookings/available-slots/${formData.service_id}?date=${formData.booking_date}`,
         )
         .then((res) => {
           setAvailableSlots(res.data);
@@ -114,7 +122,9 @@ const BookingForm = () => {
       if (remaining <= 0) {
         setPendingBooking(null);
         setTimeRemaining(null);
-        alert("⏰ Booking expired. Your reservation has been released. Please try again.");
+        alert(
+          "⏰ Booking expired. Your reservation has been released. Please try again.",
+        );
         resetForm();
       } else {
         const minutes = Math.floor(remaining / 60000);
@@ -173,14 +183,18 @@ const BookingForm = () => {
 
       setCurrentStep(3); // Move to confirmation step
     } catch (error) {
-      const message = error.response?.data?.message || "Booking failed. Please try again.";
+      const message =
+        error.response?.data?.message || "Booking failed. Please try again.";
       setError(message);
 
       if (error.response?.status === 409) {
         setTimeout(() => {
           if (formData.service_id && formData.booking_date) {
             setSlotsLoading(true);
-            api.get(`/bookings/available-slots/${formData.service_id}?date=${formData.booking_date}`)
+            api
+              .get(
+                `/bookings/available-slots/${formData.service_id}?date=${formData.booking_date}`,
+              )
               .then((res) => setAvailableSlots(res.data))
               .finally(() => setSlotsLoading(false));
           }
@@ -202,7 +216,8 @@ const BookingForm = () => {
 
       setShowSuccessModal(true);
     } catch (error) {
-      const message = error.response?.data?.message || "Payment confirmation failed";
+      const message =
+        error.response?.data?.message || "Payment confirmation failed";
       setError(message);
 
       if (message.includes("expired")) {
@@ -218,10 +233,12 @@ const BookingForm = () => {
   };
 
   const selectedSlot = availableSlots.find(
-    (s) => s.slot_id.toString() === formData.slot_id
+    (s) => s.slot_id.toString() === formData.slot_id,
   );
 
-  const selectedDate = getNext7Days().find(d => d.fullDate === formData.booking_date);
+  const selectedDate = getNext7Days().find(
+    (d) => d.fullDate === formData.booking_date,
+  );
 
   // Success Modal
   if (showSuccessModal) {
@@ -261,7 +278,8 @@ const BookingForm = () => {
             </h2>
             <p className="text-gray-600 mb-8">
               Your court has been booked for {selectedDate?.dayName} at{" "}
-              {selectedSlot && `${formatTime(selectedSlot.start_time)} - ${formatTime(selectedSlot.end_time)}`}
+              {selectedSlot &&
+                `${formatTime(selectedSlot.start_time)} - ${formatTime(selectedSlot.end_time)}`}
             </p>
 
             <div className="bg-gray-50 rounded-2xl p-6 mb-6 space-y-4">
@@ -272,12 +290,15 @@ const BookingForm = () => {
               <div className="flex justify-between items-center">
                 <span className="text-gray-600">Time</span>
                 <span className="font-semibold">
-                  {selectedSlot && `${formatTime(selectedSlot.start_time)} - ${formatTime(selectedSlot.end_time)}`}
+                  {selectedSlot &&
+                    `${formatTime(selectedSlot.start_time)} - ${formatTime(selectedSlot.end_time)}`}
                 </span>
               </div>
               <div className="flex justify-between items-center">
                 <span className="text-gray-600">Payment</span>
-                <span className="font-semibold capitalize">{formData.payment_method}</span>
+                <span className="font-semibold capitalize">
+                  {formData.payment_method}
+                </span>
               </div>
               <div className="border-t pt-4 flex justify-between items-center">
                 <span className="text-gray-600 font-semibold">Total</span>
@@ -289,7 +310,7 @@ const BookingForm = () => {
 
             <div className="space-y-3">
               <button
-                onClick={() => window.location.href = '/my-bookings'}
+                onClick={() => (window.location.href = "/my-bookings")}
                 className="w-full bg-orange-500 text-white py-4 rounded-xl font-semibold hover:bg-orange-600 transition"
               >
                 View My Bookings
@@ -331,7 +352,9 @@ const BookingForm = () => {
                   <Calendar className="text-orange-600" size={24} />
                 </div>
                 <div>
-                  <h2 className="text-2xl font-bold text-gray-900">Book Your Court</h2>
+                  <h2 className="text-2xl font-bold text-gray-900">
+                    Book Your Court
+                  </h2>
                   <p className="text-sm text-gray-500">Step 3 of 3</p>
                 </div>
               </div>
@@ -357,16 +380,23 @@ const BookingForm = () => {
               <div className="bg-yellow-100 rounded-full w-20 h-20 flex items-center justify-center mx-auto mb-4">
                 <Timer className="text-yellow-600" size={40} />
               </div>
-              <h3 className="text-xl font-bold text-gray-800 mb-2">Your Details</h3>
+              <h3 className="text-xl font-bold text-gray-800 mb-2">
+                Your Details
+              </h3>
               <p className="text-gray-600">
                 Complete payment within{" "}
-                <span className="font-bold text-red-600 text-lg">{timeRemaining}</span>
+                <span className="font-bold text-red-600 text-lg">
+                  {timeRemaining}
+                </span>
               </p>
             </div>
 
             {error && (
               <div className="mb-6 p-4 bg-red-50 border border-red-200 rounded-xl flex gap-3">
-                <AlertCircle className="text-red-600 flex-shrink-0 mt-0.5" size={20} />
+                <AlertCircle
+                  className="text-red-600 flex-shrink-0 mt-0.5"
+                  size={20}
+                />
                 <p className="text-sm text-red-800">{error}</p>
               </div>
             )}
@@ -393,16 +423,21 @@ const BookingForm = () => {
                 <div className="flex justify-between">
                   <span className="text-gray-600">Time</span>
                   <span className="font-semibold">
-                    {selectedSlot && `${formatTime(selectedSlot.start_time)} - ${formatTime(selectedSlot.end_time)}`}
+                    {selectedSlot &&
+                      `${formatTime(selectedSlot.start_time)} - ${formatTime(selectedSlot.end_time)}`}
                   </span>
                 </div>
                 <div className="flex justify-between">
                   <span className="text-gray-600">Service</span>
-                  <span className="font-semibold">{selectedService?.service_name}</span>
+                  <span className="font-semibold">
+                    {selectedService?.service_name}
+                  </span>
                 </div>
                 <div className="flex justify-between">
                   <span className="text-gray-600">Payment Method</span>
-                  <span className="font-semibold capitalize">{formData.payment_method}</span>
+                  <span className="font-semibold capitalize">
+                    {formData.payment_method}
+                  </span>
                 </div>
               </div>
 
@@ -485,7 +520,8 @@ const BookingForm = () => {
             <div className="mt-6 p-4 bg-blue-50 border border-blue-200 rounded-xl flex gap-3">
               <Info className="text-blue-600 flex-shrink-0 mt-0.5" size={20} />
               <p className="text-sm text-blue-800">
-                Your slot will be automatically released if payment is not completed within 15 minutes.
+                Your slot will be automatically released if payment is not
+                completed within 15 minutes.
               </p>
             </div>
           </div>
@@ -514,7 +550,9 @@ const BookingForm = () => {
                 <Calendar className="text-orange-600" size={24} />
               </div>
               <div>
-                <h2 className="text-2xl font-bold text-gray-900">Book Your Court</h2>
+                <h2 className="text-2xl font-bold text-gray-900">
+                  Book Your Court
+                </h2>
                 <p className="text-sm text-gray-500">
                   Step {currentStep} of {currentStep === 2 ? 2 : 3}
                 </p>
@@ -530,8 +568,12 @@ const BookingForm = () => {
 
           {/* Progress Bar */}
           <div className="flex gap-2">
-            <div className={`flex-1 h-1 rounded-full transition-colors ${currentStep >= 1 ? 'bg-orange-500' : 'bg-gray-200'}`} />
-            <div className={`flex-1 h-1 rounded-full transition-colors ${currentStep >= 2 ? 'bg-orange-500' : 'bg-gray-200'}`} />
+            <div
+              className={`flex-1 h-1 rounded-full transition-colors ${currentStep >= 1 ? "bg-orange-500" : "bg-gray-200"}`}
+            />
+            <div
+              className={`flex-1 h-1 rounded-full transition-colors ${currentStep >= 2 ? "bg-orange-500" : "bg-gray-200"}`}
+            />
             {currentStep === 3 && (
               <div className="flex-1 h-1 bg-orange-500 rounded-full" />
             )}
@@ -543,7 +585,10 @@ const BookingForm = () => {
           <div className="p-8">
             {error && (
               <div className="mb-6 p-4 bg-red-50 border border-red-200 rounded-xl flex gap-3">
-                <AlertCircle className="text-red-600 flex-shrink-0 mt-0.5" size={20} />
+                <AlertCircle
+                  className="text-red-600 flex-shrink-0 mt-0.5"
+                  size={20}
+                />
                 <p className="text-sm text-red-800">{error}</p>
               </div>
             )}
@@ -551,27 +596,32 @@ const BookingForm = () => {
             {/* Service Selection */}
             {services.length > 1 && (
               <div className="mb-8">
-                <h3 className="font-semibold text-gray-900 mb-4">Select Service</h3>
+                <h3 className="font-semibold text-gray-900 mb-4">
+                  Select Service
+                </h3>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                   {services.map((service) => (
                     <button
                       key={service.service_id}
                       onClick={() => {
                         setSelectedService(service);
-                        setFormData(prev => ({
+                        setFormData((prev) => ({
                           ...prev,
                           service_id: service.service_id,
                           slot_id: "",
-                          booking_date: ""
+                          booking_date: "",
                         }));
                         setAvailableSlots([]);
                       }}
-                      className={`p-4 rounded-xl border-2 text-left transition-all ${selectedService?.service_id === service.service_id
-                          ? 'border-orange-500 bg-orange-50'
-                          : 'border-gray-200 hover:border-orange-300'
-                        }`}
+                      className={`p-4 rounded-xl border-2 text-left transition-all ${
+                        selectedService?.service_id === service.service_id
+                          ? "border-orange-500 bg-orange-50"
+                          : "border-gray-200 hover:border-orange-300"
+                      }`}
                     >
-                      <div className="font-semibold text-gray-900">{service.service_name}</div>
+                      <div className="font-semibold text-gray-900">
+                        {service.service_name}
+                      </div>
                       <div className="text-orange-600 font-bold mt-1">
                         ${Number(service.price).toFixed(2)}/hour
                       </div>
@@ -589,19 +639,22 @@ const BookingForm = () => {
                   <button
                     key={d.fullDate}
                     onClick={() => {
-                      setFormData(prev => ({
+                      setFormData((prev) => ({
                         ...prev,
                         booking_date: d.fullDate,
-                        slot_id: ""
+                        slot_id: "",
                       }));
                       setError("");
                     }}
-                    className={`aspect-square rounded-xl border-2 transition-all p-3 flex flex-col items-center justify-center ${formData.booking_date === d.fullDate
-                        ? 'border-orange-500 bg-orange-500 text-white shadow-lg'
-                        : 'border-gray-200 hover:border-orange-300 hover:shadow-md text-gray-900'
-                      }`}
+                    className={`aspect-square rounded-xl border-2 transition-all p-3 flex flex-col items-center justify-center ${
+                      formData.booking_date === d.fullDate
+                        ? "border-orange-500 bg-orange-500 text-white shadow-lg"
+                        : "border-gray-200 hover:border-orange-300 hover:shadow-md text-gray-900"
+                    }`}
                   >
-                    <div className="text-xs uppercase opacity-70">{d.label}</div>
+                    <div className="text-xs uppercase opacity-70">
+                      {d.label}
+                    </div>
                     <div className="text-2xl font-bold mt-1">{d.date}</div>
                     <div className="text-xs mt-1 opacity-70">{d.month}</div>
                   </button>
@@ -616,26 +669,37 @@ const BookingForm = () => {
                   Available Time Slots
                   {availableSlots.length > 0 && (
                     <span className="text-sm text-gray-500 font-normal ml-2">
-                      ({availableSlots.filter(s => s.availability_status === 'available').length} available)
+                      (
+                      {
+                        availableSlots.filter(
+                          (s) => s.availability_status === "available",
+                        ).length
+                      }{" "}
+                      available)
                     </span>
                   )}
                 </h3>
 
                 {slotsLoading ? (
                   <div className="text-center py-12">
-                    <Loader className="animate-spin mx-auto mb-3 text-orange-600" size={40} />
+                    <Loader
+                      className="animate-spin mx-auto mb-3 text-orange-600"
+                      size={40}
+                    />
                     <p className="text-gray-600">Loading time slots...</p>
                   </div>
                 ) : availableSlots.length > 0 ? (
                   <div className="grid grid-cols-2 md:grid-cols-3 gap-3 max-h-96 overflow-y-auto pr-2">
                     {availableSlots.map((slot) => {
-                      const isAvailable = slot.availability_status === 'available';
-                      const isSelected = formData.slot_id === slot.slot_id.toString();
+                      const isAvailable =
+                        slot.availability_status === "available";
+                      const isSelected =
+                        formData.slot_id === slot.slot_id.toString();
                       const statusColors = {
-                        available: 'border-gray-200 hover:border-orange-500',
-                        booked: 'border-gray-200 bg-gray-50 opacity-50',
-                        reserved: 'border-yellow-200 bg-yellow-50',
-                        past: 'border-gray-200 bg-gray-50 opacity-50'
+                        available: "border-gray-200 hover:border-orange-500",
+                        booked: "border-gray-200 bg-gray-50 opacity-50",
+                        reserved: "border-yellow-200 bg-yellow-50",
+                        past: "border-gray-200 bg-gray-50 opacity-50",
                       };
 
                       return (
@@ -644,31 +708,46 @@ const BookingForm = () => {
                           disabled={!isAvailable}
                           onClick={() => {
                             if (!isAvailable) return;
-                            setFormData(prev => ({
+                            setFormData((prev) => ({
                               ...prev,
-                              slot_id: slot.slot_id.toString()
+                              slot_id: slot.slot_id.toString(),
                             }));
                             setError("");
                           }}
-                          className={`p-4 rounded-xl border-2 transition-all text-center ${isSelected
-                              ? 'border-orange-500 bg-orange-50 shadow-md'
-                              : statusColors[slot.availability_status] || 'border-gray-200'
-                            } ${!isAvailable ? 'cursor-not-allowed' : 'hover:shadow-sm'}`}
+                          className={`p-4 rounded-xl border-2 transition-all text-center ${
+                            isSelected
+                              ? "border-orange-500 bg-orange-50 shadow-md"
+                              : statusColors[slot.availability_status] ||
+                                "border-gray-200"
+                          } ${!isAvailable ? "cursor-not-allowed" : "hover:shadow-sm"}`}
                         >
-                          <Clock size={20} className={`mx-auto mb-2 ${isAvailable ? 'text-gray-700' : 'text-gray-400'
-                            }`} />
-                          <div className={`font-semibold ${isAvailable ? 'text-gray-900' : 'text-gray-400'
-                            }`}>
+                          <Clock
+                            size={20}
+                            className={`mx-auto mb-2 ${
+                              isAvailable ? "text-gray-700" : "text-gray-400"
+                            }`}
+                          />
+                          <div
+                            className={`font-semibold ${
+                              isAvailable ? "text-gray-900" : "text-gray-400"
+                            }`}
+                          >
                             {formatTime(slot.start_time)}
                           </div>
-                          <div className={`text-xs mt-1 ${isAvailable ? 'text-gray-600' : 'text-gray-400'
-                            }`}>
+                          <div
+                            className={`text-xs mt-1 ${
+                              isAvailable ? "text-gray-600" : "text-gray-400"
+                            }`}
+                          >
                             {formatTime(slot.end_time)}
                           </div>
                           {!isAvailable && (
                             <div className="text-xs mt-2 text-red-600 font-medium">
-                              {slot.availability_status === 'booked' ? 'Booked' :
-                                slot.availability_status === 'reserved' ? 'Reserved' : 'Unavailable'}
+                              {slot.availability_status === "booked"
+                                ? "Booked"
+                                : slot.availability_status === "reserved"
+                                  ? "Reserved"
+                                  : "Unavailable"}
                             </div>
                           )}
                         </button>
@@ -677,8 +756,13 @@ const BookingForm = () => {
                   </div>
                 ) : (
                   <div className="text-center py-12 bg-gray-50 rounded-xl">
-                    <Calendar className="mx-auto mb-3 text-gray-400" size={48} />
-                    <p className="text-gray-600">No slots available for this date</p>
+                    <Calendar
+                      className="mx-auto mb-3 text-gray-400"
+                      size={48}
+                    />
+                    <p className="text-gray-600">
+                      No slots available for this date
+                    </p>
                   </div>
                 )}
               </div>
@@ -686,10 +770,14 @@ const BookingForm = () => {
 
             {/* Info Note */}
             <div className="mt-6 p-4 bg-yellow-50 border border-yellow-200 rounded-xl flex gap-3">
-              <Info className="text-yellow-600 flex-shrink-0 mt-0.5" size={20} />
+              <Info
+                className="text-yellow-600 flex-shrink-0 mt-0.5"
+                size={20}
+              />
               <p className="text-sm text-yellow-800">
-                <strong>Note:</strong> Bookings must be made at least 1 hour in advance.
-                Your selected slot will be reserved for 15 minutes to complete payment.
+                <strong>Note:</strong> Bookings must be made at least 1 hour in
+                advance. Your selected slot will be reserved for 15 minutes to
+                complete payment.
               </p>
             </div>
 
@@ -716,16 +804,24 @@ const BookingForm = () => {
               Back to Date & Time
             </button>
 
-            <h3 className="text-xl font-bold text-gray-900 mb-2">Payment Method</h3>
-            <p className="text-gray-600 mb-6">Select how you would like to pay</p>
+            <h3 className="text-xl font-bold text-gray-900 mb-2">
+              Payment Method
+            </h3>
+            <p className="text-gray-600 mb-6">
+              Select how you would like to pay
+            </p>
 
             {/* Selected Summary */}
             <div className="bg-gray-50 rounded-xl p-4 mb-6">
               <div className="flex justify-between items-center">
                 <div>
-                  <div className="text-sm text-gray-600 mb-1">Selected Session</div>
+                  <div className="text-sm text-gray-600 mb-1">
+                    Selected Session
+                  </div>
                   <div className="font-semibold text-gray-900">
-                    {selectedDate?.dayName} • {selectedSlot && `${formatTime(selectedSlot.start_time)} - ${formatTime(selectedSlot.end_time)}`}
+                    {selectedDate?.dayName} •{" "}
+                    {selectedSlot &&
+                      `${formatTime(selectedSlot.start_time)} - ${formatTime(selectedSlot.end_time)}`}
                   </div>
                 </div>
                 <div className="text-right">
@@ -740,69 +836,121 @@ const BookingForm = () => {
             {/* Payment Options */}
             <div className="space-y-3 mb-6">
               <button
-                onClick={() => setFormData(prev => ({ ...prev, payment_method: 'card' }))}
-                className={`w-full p-5 rounded-xl border-2 transition-all flex items-center justify-between ${formData.payment_method === 'card'
-                    ? 'border-orange-500 bg-orange-50'
-                    : 'border-gray-200 hover:border-orange-300'
-                  }`}
+                onClick={() =>
+                  setFormData((prev) => ({ ...prev, payment_method: "card" }))
+                }
+                className={`w-full p-5 rounded-xl border-2 transition-all flex items-center justify-between ${
+                  formData.payment_method === "card"
+                    ? "border-orange-500 bg-orange-50"
+                    : "border-gray-200 hover:border-orange-300"
+                }`}
               >
                 <div className="flex items-center gap-4">
-                  <div className={`w-12 h-12 rounded-xl flex items-center justify-center ${formData.payment_method === 'card' ? 'bg-orange-500' : 'bg-gray-100'
-                    }`}>
-                    <CreditCard className={formData.payment_method === 'card' ? 'text-white' : 'text-gray-600'} size={24} />
+                  <div
+                    className={`w-12 h-12 rounded-xl flex items-center justify-center ${
+                      formData.payment_method === "card"
+                        ? "bg-orange-500"
+                        : "bg-gray-100"
+                    }`}
+                  >
+                    <CreditCard
+                      className={
+                        formData.payment_method === "card"
+                          ? "text-white"
+                          : "text-gray-600"
+                      }
+                      size={24}
+                    />
                   </div>
                   <div className="text-left">
-                    <div className="font-semibold text-gray-900">Credit Card</div>
-                    <div className="text-sm text-gray-600">Visa, Mastercard, Amex</div>
+                    <div className="font-semibold text-gray-900">
+                      Credit Card
+                    </div>
+                    <div className="text-sm text-gray-600">
+                      Visa, Mastercard, Amex
+                    </div>
                   </div>
                 </div>
-                {formData.payment_method === 'card' && (
+                {formData.payment_method === "card" && (
                   <CheckCircle className="text-orange-500" size={24} />
                 )}
               </button>
 
               <button
-                onClick={() => setFormData(prev => ({ ...prev, payment_method: 'cash' }))}
-                className={`w-full p-5 rounded-xl border-2 transition-all flex items-center justify-between ${formData.payment_method === 'cash'
-                    ? 'border-orange-500 bg-orange-50'
-                    : 'border-gray-200 hover:border-orange-300'
-                  }`}
+                onClick={() =>
+                  setFormData((prev) => ({ ...prev, payment_method: "cash" }))
+                }
+                className={`w-full p-5 rounded-xl border-2 transition-all flex items-center justify-between ${
+                  formData.payment_method === "cash"
+                    ? "border-orange-500 bg-orange-50"
+                    : "border-gray-200 hover:border-orange-300"
+                }`}
               >
                 <div className="flex items-center gap-4">
-                  <div className={`w-12 h-12 rounded-xl flex items-center justify-center ${formData.payment_method === 'cash' ? 'bg-orange-500' : 'bg-gray-100'
-                    }`}>
-                    <DollarSign className={formData.payment_method === 'cash' ? 'text-white' : 'text-gray-600'} size={24} />
+                  <div
+                    className={`w-12 h-12 rounded-xl flex items-center justify-center ${
+                      formData.payment_method === "cash"
+                        ? "bg-orange-500"
+                        : "bg-gray-100"
+                    }`}
+                  >
+                    <DollarSign
+                      className={
+                        formData.payment_method === "cash"
+                          ? "text-white"
+                          : "text-gray-600"
+                      }
+                      size={24}
+                    />
                   </div>
                   <div className="text-left">
                     <div className="font-semibold text-gray-900">Cash</div>
-                    <div className="text-sm text-gray-600">Pay at the venue</div>
+                    <div className="text-sm text-gray-600">
+                      Pay at the venue
+                    </div>
                   </div>
                 </div>
-                {formData.payment_method === 'cash' && (
+                {formData.payment_method === "cash" && (
                   <CheckCircle className="text-orange-500" size={24} />
                 )}
               </button>
 
               <button
-                onClick={() => setFormData(prev => ({ ...prev, payment_method: 'online' }))}
-                className={`w-full p-5 rounded-xl border-2 transition-all flex items-center justify-between ${formData.payment_method === 'online'
-                    ? 'border-orange-500 bg-orange-50'
-                    : 'border-gray-200 hover:border-orange-300'
-                  }`}
+                onClick={() =>
+                  setFormData((prev) => ({ ...prev, payment_method: "online" }))
+                }
+                className={`w-full p-5 rounded-xl border-2 transition-all flex items-center justify-between ${
+                  formData.payment_method === "online"
+                    ? "border-orange-500 bg-orange-50"
+                    : "border-gray-200 hover:border-orange-300"
+                }`}
               >
                 <div className="flex items-center gap-4">
-                  <div className={`w-12 h-12 rounded-xl flex items-center justify-center ${formData.payment_method === 'online' ? 'bg-orange-500' : 'bg-gray-100'
-                    }`}>
-                    <svg className={`w-6 h-6 ${formData.payment_method === 'online' ? 'text-white' : 'text-gray-600'}`} fill="currentColor" viewBox="0 0 24 24">
+                  <div
+                    className={`w-12 h-12 rounded-xl flex items-center justify-center ${
+                      formData.payment_method === "online"
+                        ? "bg-orange-500"
+                        : "bg-gray-100"
+                    }`}
+                  >
+                    <svg
+                      className={`w-6 h-6 ${formData.payment_method === "online" ? "text-white" : "text-gray-600"}`}
+                      fill="currentColor"
+                      viewBox="0 0 24 24"
+                    >
                       <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 18c-4.41 0-8-3.59-8-8s3.59-8 8-8 8 3.59 8 8-3.59 8-8 8zm-5.5-2.5l7.51-3.49L17.5 6.5 9.99 9.99 6.5 17.5zm5.5-6.6c.61 0 1.1.49 1.1 1.1s-.49 1.1-1.1 1.1-1.1-.49-1.1-1.1.49-1.1 1.1-1.1z" />
                     </svg>
                   </div>
                   <div className="text-left">
-                    <div className="font-semibold text-gray-900">Online Payment</div>
-                    <div className="text-sm text-gray-600">PayPal, Apple Pay, Google Pay</div>
+                    <div className="font-semibold text-gray-900">
+                      Online Payment
+                    </div>
+                    <div className="text-sm text-gray-600">
+                      PayPal, Apple Pay, Google Pay
+                    </div>
                   </div>
                 </div>
-                {formData.payment_method === 'online' && (
+                {formData.payment_method === "online" && (
                   <CheckCircle className="text-orange-500" size={24} />
                 )}
               </button>
