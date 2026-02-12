@@ -85,12 +85,17 @@ export const login = async (req, res) => {
       { expiresIn: '7d' }
     );
 
+    console.log('🔐 Setting cookie with token:', token.substring(0, 30) + '...'); // ✅ Debug
+
     res.cookie('token', token, {
       httpOnly: true,
       secure: process.env.NODE_ENV === 'production',
       sameSite: 'Strict',
-      maxAge: 7 * 24 * 60 * 60 * 1000
+      maxAge: 7 * 24 * 60 * 60 * 1000,
+      path: '/',
     });
+
+    console.log('✅ Cookie set successfully'); // ✅ Debug
 
     res.json({
       message: 'Login successful',
@@ -102,9 +107,12 @@ export const login = async (req, res) => {
       }
     });
   } catch (err) {
+    console.error('❌ Login error:', err); // ✅ Debug
     res.status(500).json({ message: 'Server error' });
   }
 };
+
+
 
 /* ================= LOGOUT ================= */
 export const logout = async (req, res) => {
@@ -112,7 +120,8 @@ export const logout = async (req, res) => {
     res.clearCookie("token", {
       httpOnly: true,
       secure: process.env.NODE_ENV === "production",
-      sameSite: "Lax", // ✅ IMPORTANT
+      sameSite: "Strict", // ✅ Changed from "Lax"
+      path: '/', // ✅ Added for consistency
     });
 
     res.status(200).json({ message: "Logout successful" });
@@ -120,9 +129,20 @@ export const logout = async (req, res) => {
     res.status(500).json({ message: "Server error" });
   }
 };
-
 export const me = async (req, res) => {
-  const [user] = await pool.query('SELECT user_id, full_name, email, role FROM users WHERE user_id = ?', [req.user.user_id]);
-  if (user.length === 0) return res.status(404).json({ message: 'User not found' });
-  res.json({ user: user[0] });
+  try {
+    const [user] = await pool.query(
+      'SELECT user_id, full_name, email, phone, role FROM users WHERE user_id = ?',
+      [req.user.user_id]
+    );
+
+    if (user.length === 0) {
+      return res.status(404).json({ message: 'User not found' });
+    }
+
+    res.json({ user: user[0] });
+  } catch (err) {
+    console.error('Get user error:', err);
+    res.status(500).json({ message: 'Server error' });
+  }
 };
