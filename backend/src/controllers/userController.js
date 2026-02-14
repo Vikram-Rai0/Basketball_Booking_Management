@@ -1,9 +1,8 @@
-//  User Controller - Handles user-related operations with admin ownership
-
-import pool from '../config/db.js';
+// User Controller - Handle user operations with admin ownership
+import pool from '../config/database.js';
 import bcrypt from 'bcryptjs';
 
-// Get al users (Admin sees only users Who booked their services)
+// Get all users (Admin sees only users who booked their services)
 const getAllUsers = async (req, res) => {
   try {
     const admin_id = req.user.user_id;
@@ -13,7 +12,7 @@ const getAllUsers = async (req, res) => {
       return res.status(403).json({ message: 'Access denied' });
     }
 
-    //Get users who have booked admin's services 
+    // Get users who have booked admin's services
     const [users] = await pool.query(
       `SELECT DISTINCT 
         u.user_id,
@@ -29,9 +28,11 @@ const getAllUsers = async (req, res) => {
        ORDER BY u.created_at DESC`,
       [admin_id]
     );
+
     res.json(users);
   } catch (error) {
-    res.status(500).json({ message: 'Error fetching users', error });
+    console.error('Get users error:', error);
+    res.status(500).json({ message: 'Server error', error: error.message });
   }
 };
 
@@ -79,13 +80,15 @@ const getUserBookings = async (req, res) => {
     const { user_id } = req.params;
     const admin_id = req.user.user_id;
     const isAdmin = req.user.role === 'admin';
+
     if (!isAdmin) {
       return res.status(403).json({ message: 'Access denied' });
     }
 
-    // Get booking for admin's services only
+    // Get bookings for admin's services only
     const [bookings] = await pool.query(
-      `SELECT   b.booking_id,
+      `SELECT 
+        b.booking_id,
         b.booking_date,
         b.total_amount,
         b.payment_method,
@@ -95,21 +98,20 @@ const getUserBookings = async (req, res) => {
         s.service_name,
         t.start_time,
         t.end_time
-
-               FROM bookings b
-               JOIN services s ON b.service_id = s.service_id
-               JOIN time_slots t ON b.time_slot_id = t.time_slot_id
-               WHERE b.user_id = ? AND s.admin_id = ?
-               ORDER BY b.created_at DESC`,
+       FROM bookings b
+       JOIN services s ON b.service_id = s.service_id
+       JOIN time_slots t ON b.slot_id = t.slot_id
+       WHERE b.user_id = ? AND s.admin_id = ?
+       ORDER BY b.booking_date DESC`,
       [user_id, admin_id]
     );
+
     res.json(bookings);
   } catch (error) {
     console.error('Get user bookings error:', error);
     res.status(500).json({ message: 'Server error', error: error.message });
   }
-}
-
+};
 
 // Update user (Limited - admin can only update users who booked their services)
 const updateUser = async (req, res) => {
@@ -183,60 +185,6 @@ const deleteUser = async (req, res) => {
   }
 };
 
-// Get user statistics (for a specific user who booked admin's services)
-const getUserStats = async (req, res) => {
-  try {
-    const { user_id } = req.params;
-    const admin_id = req.user.user_id;
-    const isAdmin = req.user.role === 'admin';
-
-    if (!isAdmin) {
-      return res.status(403).json({ message: 'Access denied' });
-    }
-
-    // Total bookings by this user for admin's services
-    const [totalBookings] = await pool.query(
-      `SELECT COUNT(*) as total FROM bookings b
-       JOIN services s ON b.service_id = s.service_id
-       WHERE b.user_id = ? AND s.admin_id = ?`,
-      [user_id, admin_id]
-    );
-
-    // Total amount spent
-    const [totalSpent] = await pool.query(
-      `SELECT SUM(b.total_amount) as total FROM bookings b
-       JOIN services s ON b.service_id = s.service_id
-       WHERE b.user_id = ? AND s.admin_id = ? AND b.payment_status = 'completed'`,
-      [user_id, admin_id]
-    );
-
-    // Confirmed bookings
-    const [confirmedBookings] = await pool.query(
-      `SELECT COUNT(*) as total FROM bookings b
-       JOIN services s ON b.service_id = s.service_id
-       WHERE b.user_id = ? AND s.admin_id = ? AND b.booking_status = 'confirmed'`,
-      [user_id, admin_id]
-    );
-
-    // Cancelled bookings
-    const [cancelledBookings] = await pool.query(
-      `SELECT COUNT(*) as total FROM bookings b
-       JOIN services s ON b.service_id = s.service_id
-       WHERE b.user_id = ? AND s.admin_id = ? AND b.booking_status = 'cancelled'`,
-      [user_id, admin_id]
-    );
-
-    res.json({
-      totalBookings: totalBookings[0].total,
-      totalSpent: totalSpent[0].total || 0,
-      confirmedBookings: confirmedBookings[0].total,
-      cancelledBookings: cancelledBookings[0].total
-    });
-  } catch (error) {
-    console.error('Get user stats error:', error);
-    res.status(500).json({ message: 'Server error', error: error.message });
-  }
-};
 
 export {
   getAllUsers,
